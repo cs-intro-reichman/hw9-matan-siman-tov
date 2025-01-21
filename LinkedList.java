@@ -183,7 +183,7 @@ public class LinkedList {
 	 * @throws NullPointerException if node == null (as per the tests)
 	 */
 	public void remove(Node node) {
-		// לפי הטסט: אם node == null => NullPointerException("NullPointerException!")
+		// אם node == null => לפי הטסטים צריכים לזרוק NullPointerException עם הודעה מסוימת
 		if (node == null) {
 			throw new NullPointerException("NullPointerException!");
 		}
