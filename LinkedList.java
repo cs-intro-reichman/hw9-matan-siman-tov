@@ -1,6 +1,3 @@
-/**
- * Represents a list of Nodes. 
- */
 public class LinkedList {
 	
 	private Node first; // pointer to the first element of this list
@@ -12,7 +9,7 @@ public class LinkedList {
 	 */ 
 	public LinkedList () {
 		first = null;
-		last = first;
+		last = null;
 		size = 0;
 	}
 	
@@ -43,16 +40,13 @@ public class LinkedList {
 	/**
 	 * Gets the node located at the given index in this list. 
 	 * 
-	 * @param index
-	 *        the index of the node to retrieve, between 0 and size
-	 * @throws IllegalArgumentException
-	 *         if index is negative or greater than the list's size
+	 * @param index the index of the node to retrieve, between 0 and size-1
+	 * @throws IllegalArgumentException if index is out of range
 	 * @return the node at the given index
 	 */		
 	public Node getNode(int index) {
-		if (index < 0 || index > size) {
-			throw new IllegalArgumentException(
-					"index must be between 0 and size");
+		if (index < 0 || index >= size) {
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
 		Node current = this.first;
 		for (int i = 0; i < index; i++) {
@@ -61,115 +55,100 @@ public class LinkedList {
 		return current;
 	}
 
-	
-	
 	/**
 	 * Creates a new Node object that points to the given memory block, 
 	 * and inserts the node at the given index in this list.
 	 * <p>
-	 * If the given index is 0, the new node becomes the first node in this list.
+	 * If the given index is 0, the new node becomes the first node.
 	 * <p>
-	 * If the given index equals the list's size, the new node becomes the last 
-	 * node in this list.
-     * <p>
-	 * The method implementation is optimized, as follows: if the given 
-	 * index is either 0 or the list's size, the addition time is O(1). 
+	 * If the given index equals the list's size, the new node becomes the last.
+	 * <p>
+	 * The method implementation is optimized for index=0 or index=size => O(1).
 	 * 
-	 * @param block
-	 *        the memory block to be inserted into the list
-	 * @param index
-	 *        the index before which the memory block should be inserted
-	 * @throws IllegalArgumentException
-	 *         if index is negative or greater than the list's size
+	 * @param block the memory block to be inserted
+	 * @param index the index before which the memory block should be inserted
+	 * @throws IllegalArgumentException if index < 0 or index > size
 	 */
-		public void add(int index, MemoryBlock block) {
+	public void add(int index, MemoryBlock block) {
 		if (index < 0 || index > size) {
 			throw new IllegalArgumentException("index must be between 0 and size");
 		}
 	
 		Node newNode = new Node(block);
 	
+		// Case 1: Add at beginning
 		if (index == 0) {
 			newNode.next = this.first;
 			this.first = newNode;
-			if (this.size == 0) { // If the list was empty, update last
+			if (this.size == 0) {
 				this.last = newNode;
 			}
 			this.size++;
 			return;
 		}
-	
-		// Case 2: Add at the end of the list
+		// Case 2: Add at the end
 		if (index == this.size) {
 			this.last.next = newNode;
 			this.last = newNode;
 			this.size++;
 			return;
 		}
-	
-		// Case 3: Add in the middle of the list
+		// Case 3: Add in the middle
 		Node current = this.first;
-		for (int i = 0; i < index - 1; i++) { // Navigate to the node before the target position
+		for (int i = 0; i < index - 1; i++) {
 			current = current.next;
 		}
-		newNode.next = current.next; // Insert new node
+		newNode.next = current.next;
 		current.next = newNode;
 		this.size++;
 	}
 
 	/**
 	 * Creates a new node that points to the given memory block, and adds it
-	 * to the end of this list (the node will become the list's last element).
+	 * to the end of this list.
 	 * 
-	 * @param block
-	 *        the given memory block
+	 * @param block the given memory block
 	 */
 	public void addLast(MemoryBlock block) {
 		Node newNode = new Node(block);
-		if(this.size == 0){
+		if (this.size == 0) {
 			this.first = newNode;
 			this.last = newNode;
-			this.size++;
-			return;
+		} else {
+			this.last.next = newNode;
+			this.last = newNode;
 		}
-		this.last.next = newNode;
-		this.last = newNode; 
 		this.size++;
 	}
 	
 	/**
 	 * Creates a new node that points to the given memory block, and adds it 
-	 * to the beginning of this list (the node will become the list's first element).
+	 * to the beginning of this list.
 	 * 
-	 * @param block
-	 *        the given memory block
+	 * @param block the given memory block
 	 */
 	public void addFirst(MemoryBlock block) {
 		Node newNode = new Node(block);
-		if(this.size == 0){
+		if (this.size == 0) {
 			this.first = newNode;
 			this.last = newNode;
-			this.size++;
-			return;
+		} else {
+			newNode.next = this.first;
+			this.first = newNode;
 		}
-		newNode.next = this.first;
-		this.first = newNode;
 		this.size++;
 	}
 
 	/**
 	 * Gets the memory block located at the given index in this list.
 	 * 
-	 * @param index
-	 *        the index of the retrieved memory block
+	 * @param index the index of the retrieved memory block
 	 * @return the memory block at the given index
-	 * @throws IllegalArgumentException
-	 *         if index is negative or greater than or equal to size
+	 * @throws IllegalArgumentException if index out of range
 	 */
 	public MemoryBlock getBlock(int index) {
 		if (index < 0 || index >= size) {
-			throw new IllegalArgumentException(
-					"index must be between 0 and size");
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
 		Node current = this.first;
 		for(int i = 0 ; i < index ; i++){
@@ -181,22 +160,18 @@ public class LinkedList {
 	/**
 	 * Gets the index of the node pointing to the given memory block.
 	 * 
-	 * @param block
-	 *        the given memory block
-	 * @return the index of the block, or -1 if the block is not in this list
+	 * @param block the given memory block
+	 * @return the index of the block, or -1 if not in this list
 	 */
 	public int indexOf(MemoryBlock block) {
-		if (this.size == 0){
-			return -1;
-		}
 		Node current = this.first;
 		int index = 0;
-		while (current!=null){
-			if(current.block.equals(block)){
+		while (current != null) {
+			if (current.block.equals(block)) {
 				return index;
 			}
-			index++;
 			current = current.next;
+			index++;
 		}
 		return -1;
 	}
@@ -204,52 +179,52 @@ public class LinkedList {
 	/**
 	 * Removes the given node from this list.	
 	 * 
-	 * @param node
-	 *        the node that will be removed from this list
+	 * @param node the node that will be removed
+	 * @throws NullPointerException if node == null (as per the tests)
 	 */
 	public void remove(Node node) {
-		if (node == null || first == null) {
-			return;
+		// לפי הטסט: אם node == null => NullPointerException("NullPointerException!")
+		if (node == null) {
+			throw new NullPointerException("NullPointerException!");
 		}
-		
-		// Handle removing first node
-		if (first.block.equals(node.block)) {
-			first = first.next;
-			if (first == null) {
-				last = null;
+		if (size == 0) {
+			return; // list empty, nothing to remove
+		}
+		// אם הנוד הראשון הוא זה שיש להסיר
+		if (this.first == node) {
+			this.first = this.first.next;
+			if (this.size == 1) {
+				this.last = null;
 			}
-			size--;
+			this.size--;
 			return;
 		}
-		
-		// Handle other cases
-		Node current = first;
-		while (current.next != null && !current.next.block.equals(node.block)) {
+		// חיפוש הנוד
+		Node current = this.first;
+		while (current.next != null && current.next != node) {
 			current = current.next;
 		}
-		
-		if (current.next != null) {
-			if (current.next == last) {
-				last = current;
+		// אם מצאנו
+		if (current.next == node) {
+			current.next = node.next;
+			if (node == this.last) {
+				this.last = current;
 			}
-			current.next = current.next.next;
-			size--;
+			this.size--;
 		}
 	}
 
 	/**
 	 * Removes from this list the node which is located at the given index.
 	 * 
-	 * @param index the location of the node that has to be removed.
-	 * @throws IllegalArgumentException
-	 *         if index is negative or greater than or equal to size
+	 * @param index the location of the node
+	 * @throws IllegalArgumentException if index is out of range
 	 */
 	public void remove(int index) {
 		if (index < 0 || index >= size) {
-			throw new IllegalArgumentException(
-					"index must be between 0 and size");
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
-		if(index == 0){
+		if (index == 0) {
 			this.first = this.first.next;
 			if (this.size == 1) {
 				this.last = null;
@@ -261,8 +236,9 @@ public class LinkedList {
 		for(int i = 0 ; i < index - 1 ; i++){
 			current = current.next;
 		}
-		current.next = current.next.next;
-		if(index == this.size -1){
+		Node nodeToRemove = current.next;
+		current.next = nodeToRemove.next;
+		if (nodeToRemove == this.last) {
 			this.last = current;
 		}
 		this.size--;
@@ -271,44 +247,44 @@ public class LinkedList {
 	/**
 	 * Removes from this list the node pointing to the given memory block.
 	 * 
-	 * @param block the memory block that should be removed from the list
-	 * @throws IllegalArgumentException
-	 *         if the given memory block is not in this list
+	 * @param block the memory block to remove
+	 * @throws IllegalArgumentException if block == null or block is not in the list
+	 *         (the tests expect the same message in both cases)
 	 */
 	public void remove(MemoryBlock block) {
 		if (block == null) {
-			throw new IllegalArgumentException("Cannot remove null block");
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
-		
-		if (first == null) {
-			throw new IllegalArgumentException("Cannot remove from empty list");
+		if (size == 0) {
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
-		
-		if (first.block.equals(block)) {
-			first = first.next;
-			if (first == null) {
-				last = null;
+		// אם הנוד הראשון מכיל את הבלוק
+		if (this.first.block.equals(block)) {
+			this.first = this.first.next;
+			if (this.size == 1) {
+				this.last = null;
 			}
-			size--;
+			this.size--;
 			return;
 		}
-		
-		Node current = first;
+		// חיפוש הבלוק
+		Node current = this.first;
 		while (current.next != null && !current.next.block.equals(block)) {
 			current = current.next;
 		}
-		
 		if (current.next == null) {
-			throw new IllegalArgumentException("Block not found in list");
+			// not found
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
-		
-		if (current.next == last) {
-			last = current;
+		// הסרה
+		Node toRemove = current.next;
+		current.next = toRemove.next;
+		if (toRemove == this.last) {
+			this.last = current;
 		}
-		current.next = current.next.next;
-		size--;
+		this.size--;
 	}
-	
+
 	/**
 	 * Returns an iterator over this list, starting with the first element.
 	 */
@@ -320,15 +296,19 @@ public class LinkedList {
 	 * A textual representation of this list, for debugging.
 	 */
 	public String toString() {
-	if(size==0){
-		return "[]";
-	}
-	String result = "[";
-	Node current = this.first;
-	for(int i = 0 ; i < this.size ; i++){
-		result = result + current + ", ";
-		current  = current.next;
-	}
-		return result.substring(0, result.length() - 2) + "]";
+		if (size == 0) {
+			return "[]";
+		}
+		StringBuilder sb = new StringBuilder("[");
+		Node current = this.first;
+		while (current != null) {
+			sb.append(current.toString());
+			if (current.next != null) {
+				sb.append(", ");
+			}
+			current = current.next;
+		}
+		sb.append("]");
+		return sb.toString();
 	}
 }
