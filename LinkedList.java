@@ -207,13 +207,28 @@ public class LinkedList {
 	 *        the node that will be removed from this list
 	 */
 	public void remove(Node node) {
-		Node current = this.first;
-		while (current.next!=null && !current.next.block.equals(node.block)){
+		if (first == null) return;
+	
+		if (first.block.equals(node.block)) {
+			first = first.next;
+			if (first == null) { // אם הרשימה ריקה
+				last = null;
+			}
+			size--;
+			return;
+		}
+	
+		Node current = first;
+		while (current.next != null && !current.next.block.equals(node.block)) {
 			current = current.next;
 		}
-		if (current.next!=null){
+	
+		if (current.next != null) {
 			current.next = current.next.next;
-			this.size--;
+			if (current.next == null) { // אם זה היה האיבר האחרון
+				last = current;
+			}
+			size--;
 		}
 	}
 
@@ -226,28 +241,28 @@ public class LinkedList {
 	 */
 	public void remove(int index) {
 		if (index < 0 || index >= size) {
-			throw new IllegalArgumentException(
-					"index must be between 0 and size");
+			throw new IllegalArgumentException("index must be between 0 and size");
 		}
-		if(index == 0){
-			this.first = this.first.next;
-			if (this.size == 1) {
-				this.last = null;
+		if (index == 0) {
+			first = first.next;
+			if (size == 1) { 
+				last = null;
 			}
-			this.size--;
+			size--;
 			return;
 		}
-		Node current = this.first;
-		for(int i = 0 ; i < index - 1 ; i++){
+	
+		Node current = first;
+		for (int i = 0; i < index - 1; i++) {
 			current = current.next;
 		}
+	
 		current.next = current.next.next;
-		if(index == this.size -1){
-			this.last = current;
+		if (current.next == null) { 
+			last = current;
 		}
-		this.size--;
+		size--;
 	}
-
 	/**
 	 * Removes from this list the node pointing to the given memory block.
 	 * 
@@ -257,8 +272,9 @@ public class LinkedList {
 	 */
 	public void remove(MemoryBlock block) {
 		if (first == null) {
-			return; 
+			throw new IllegalArgumentException("Block not found in the list");
 		}
+	
 		if (first.block.equals(block)) {
 			first = first.next;
 			if (first == null) { 
@@ -267,19 +283,21 @@ public class LinkedList {
 			size--;
 			return;
 		}
-
+	
 		Node current = first;
 		while (current.next != null && !current.next.block.equals(block)) {
 			current = current.next;
 		}
 	
-		if (current.next != null) {
-			current.next = current.next.next;
-			if (current.next == null) { 
-				last = current;
-			}
-			size--;
+		if (current.next == null) {
+			throw new IllegalArgumentException("Block not found in the list");
 		}
+	
+		current.next = current.next.next;
+		if (current.next == null) { 
+			last = current;
+		}
+		size--;
 	}
 
 	/**
