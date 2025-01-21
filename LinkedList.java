@@ -62,6 +62,7 @@ public class LinkedList {
 	}
 
 	
+	
 	/**
 	 * Creates a new Node object that points to the given memory block, 
 	 * and inserts the node at the given index in this list.
@@ -207,27 +208,31 @@ public class LinkedList {
 	 *        the node that will be removed from this list
 	 */
 	public void remove(Node node) {
-		if (first == null) return;
-	
+		if (node == null || first == null) {
+			return;
+		}
+		
+		// Handle removing first node
 		if (first.block.equals(node.block)) {
 			first = first.next;
-			if (first == null) { // אם הרשימה ריקה
+			if (first == null) {
 				last = null;
 			}
 			size--;
 			return;
 		}
-	
+		
+		// Handle other cases
 		Node current = first;
 		while (current.next != null && !current.next.block.equals(node.block)) {
 			current = current.next;
 		}
-	
+		
 		if (current.next != null) {
-			current.next = current.next.next;
-			if (current.next == null) { // אם זה היה האיבר האחרון
+			if (current.next == last) {
 				last = current;
 			}
+			current.next = current.next.next;
 			size--;
 		}
 	}
@@ -241,28 +246,28 @@ public class LinkedList {
 	 */
 	public void remove(int index) {
 		if (index < 0 || index >= size) {
-			throw new IllegalArgumentException("index must be between 0 and size");
+			throw new IllegalArgumentException(
+					"index must be between 0 and size");
 		}
-		if (index == 0) {
-			first = first.next;
-			if (size == 1) { 
-				last = null;
+		if(index == 0){
+			this.first = this.first.next;
+			if (this.size == 1) {
+				this.last = null;
 			}
-			size--;
+			this.size--;
 			return;
 		}
-	
-		Node current = first;
-		for (int i = 0; i < index - 1; i++) {
+		Node current = this.first;
+		for(int i = 0 ; i < index - 1 ; i++){
 			current = current.next;
 		}
-	
 		current.next = current.next.next;
-		if (current.next == null) { 
-			last = current;
+		if(index == this.size -1){
+			this.last = current;
 		}
-		size--;
+		this.size--;
 	}
+
 	/**
 	 * Removes from this list the node pointing to the given memory block.
 	 * 
@@ -271,35 +276,39 @@ public class LinkedList {
 	 *         if the given memory block is not in this list
 	 */
 	public void remove(MemoryBlock block) {
-		if (first == null) {
-			throw new IllegalArgumentException("Block not found in the list");
+		if (block == null) {
+			throw new IllegalArgumentException("Cannot remove null block");
 		}
-	
+		
+		if (first == null) {
+			throw new IllegalArgumentException("Cannot remove from empty list");
+		}
+		
 		if (first.block.equals(block)) {
 			first = first.next;
-			if (first == null) { 
+			if (first == null) {
 				last = null;
 			}
 			size--;
 			return;
 		}
-	
+		
 		Node current = first;
 		while (current.next != null && !current.next.block.equals(block)) {
 			current = current.next;
 		}
-	
+		
 		if (current.next == null) {
-			throw new IllegalArgumentException("Block not found in the list");
+			throw new IllegalArgumentException("Block not found in list");
 		}
-	
-		current.next = current.next.next;
-		if (current.next == null) { 
+		
+		if (current.next == last) {
 			last = current;
 		}
+		current.next = current.next.next;
 		size--;
 	}
-
+	
 	/**
 	 * Returns an iterator over this list, starting with the first element.
 	 */
