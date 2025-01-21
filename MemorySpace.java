@@ -1,151 +1,125 @@
 public class MemorySpace {
-	
-	private LinkedList allocatedList; // blocks currently allocated
-	private LinkedList freeList;      // blocks currently free
 
-	/**
-	 * Constructs a new managed memory space of a given maximal size.
-	 * @param maxSize the size of the memory space
-	 */
-	public MemorySpace(int maxSize) {
-		allocatedList = new LinkedList();
-		freeList = new LinkedList();
-		// start with one big free block
-		freeList.addLast(new MemoryBlock(0, maxSize));
-	}
+    private LinkedList allocatedList; // blocks currently allocated
+    private LinkedList freeList;      // blocks currently free
 
-	/**
-	 * Allocates a memory block of a requested length (in words).
-	 * 1) Tries to find a free block that fits (First Fit).
-	 * 2) If fails, calls defrag(), tries again.
-	 * 3) Prints "true" if eventually found a block, else "false".
-	 * Returns the base address of the allocated block, or -1 if fail.
-	 */
-	public int malloc(int length) {
-		// First attempt
-		int address = tryMalloc(length);
-		if (address == -1) {
-			// if failed, defrag then try again
-			defrag();
-			address = tryMalloc(length);
-		}
-		if (address == -1) {
-			System.out.println("false");
-		} else {
-			System.out.println("true");
-		}
-		return address;
-	}
+    /**
+     * Constructs a new managed memory space of a given maximal size.
+     */
+    public MemorySpace(int maxSize) {
+        allocatedList = new LinkedList();
+        freeList = new LinkedList();
+        // entire memory is initially free
+        freeList.addLast(new MemoryBlock(0, maxSize));
+    }
 
-	/**
-	 * A helper that tries once to find a block in freeList.
-	 * If succeed, splits/removes the block and returns baseAddress, else -1.
-	 */
-	private int tryMalloc(int length) {
-		ListIterator it = freeList.iterator();
-		while (it.hasNext()) {
-			MemoryBlock curBlock = it.current.block;
-			if (curBlock.length >= length) {
-				int address = curBlock.baseAddress;
-				allocatedList.addLast(new MemoryBlock(address, length));
-				
-				curBlock.baseAddress += length;
-				curBlock.length -= length;
-				
-				if (curBlock.length == 0) {
-					freeList.remove(curBlock);
-				}
-				return address;
-			}
-			it.current = it.current.next;
-		}
-		return -1;
-	}
+    /**
+     * Allocates a memory block of length 'length', using a "first-fit" approach:
+     * 1) Scans freeList from start to end for a block whose length >= requested 'length'.
+     * 2) If found, carve out that portion from the free block and add to allocatedList.
+     * 3) If not found, returns -1.
+     * 
+     * Return value = baseAddress of the allocated block, or -1 if fail.
+     */
+    public int malloc(int length) {
+        // simple first-fit
+        for (int i = 0; i < freeList.getSize(); i++) {
+            MemoryBlock freeBlock = freeList.getBlock(i);
+            if (freeBlock.length >= length) {
+                int address = freeBlock.baseAddress;
+                // allocate the new block
+                allocatedList.addLast(new MemoryBlock(address, length));
 
-	/**
-	 * Frees the memory block whose base address = address.
-	 * According to the tests:
-	 * - If freeList is empty => throw IllegalArgumentException("index must be between 0 and size").
-	 * - If address not found in allocatedList => do nothing, but eventually print "true".
-	 * - If found => move block from allocatedList to freeList, print "true".
-	 */
-	public void free(int address) {
-		// case #2 from the tests: "Try to free a block of memory when freeList is empty" => error
-		if (freeList.getSize() == 0) {
-			throw new IllegalArgumentException("index must be between 0 and size");
-		}
+                // update the free block
+                freeBlock.baseAddress += length;
+                freeBlock.length -= length;
 
-		// search in allocatedList
-		boolean found = false;
-		ListIterator it = allocatedList.iterator();
-		while (it.hasNext()) {
-			MemoryBlock cur = it.current.block;
-			if (cur.baseAddress == address) {
-				freeList.addLast(new MemoryBlock(cur.baseAddress, cur.length));
-				allocatedList.remove(cur);
-				found = true;
-				break;
-			}
-			it.current = it.current.next;
-		}
+                // if freeBlock now has length 0, remove it from freeList
+                if (freeBlock.length == 0) {
+                    freeList.remove(freeBlock);
+                }
+                return address;
+            }
+        }
+        // if not found
+        return -1;
+    }
 
-		// if not found => do nothing
-		// final requirement: always print "true" (except the thrown case above)
-		System.out.println("true");
-	}
-	
-	/**
-	 * Performs defragmentation of the free list:
-	 * 1) Sorts freeList by baseAddress
-	 * 2) Merges adjacent blocks
-	 * 3) Always prints "true" at the end (as the tests expect).
-	 */
-	public void defrag() {
-		int n = freeList.getSize();
-		if (n <= 1) {
-			// still must print "true" at the end
-			System.out.println("true");
-			return;
-		}
-		
-		// gather
-		java.util.ArrayList<MemoryBlock> blocks = new java.util.ArrayList<>();
-		ListIterator it = freeList.iterator();
-		while (it.hasNext()) {
-			blocks.add(it.current.block);
-			it.current = it.current.next;
-		}
-		
-		// sort by baseAddress
-		blocks.sort((a,b)->Integer.compare(a.baseAddress, b.baseAddress));
-		
-		// rebuild freeList sorted
-		freeList = new LinkedList();
-		for (MemoryBlock mb : blocks) {
-			freeList.addLast(mb);
-		}
-		
-		// merge adjacent
-		int i = 0;
-		while (i < freeList.getSize() - 1) {
-			MemoryBlock curr = freeList.getBlock(i);
-			MemoryBlock nxt  = freeList.getBlock(i+1);
-			if (curr.baseAddress + curr.length == nxt.baseAddress) {
-				curr.length += nxt.length;
-				freeList.remove(nxt);
-			} else {
-				i++;
-			}
-		}
+    /**
+     * Frees the memory block whose base address == address.
+     * 1) If allocatedList is empty => throw new IllegalArgumentException("index must be between 0 and size");
+     * 2) Otherwise, search for the block in allocatedList:
+     *    - if found, remove it from allocatedList and add it to freeList (at the end)
+     *    - if not found, do nothing.
+     */
+    public void free(int address) {
+        if (allocatedList.getSize() == 0) {
+            // according to the tests "Try to free a block of memory when freeList is empty"
+            // but the code actually checks allocatedList is empty => throw
+            throw new IllegalArgumentException("index must be between 0 and size");
+        }
+        // search for the block
+        for (int i = 0; i < allocatedList.getSize(); i++) {
+            MemoryBlock block = allocatedList.getBlock(i);
+            if (block.baseAddress == address) {
+                // remove from allocatedList
+                allocatedList.remove(block);
+                // add to freeList
+                freeList.addLast(new MemoryBlock(block.baseAddress, block.length));
+                return;
+            }
+        }
+        // if not found => do nothing
+    }
 
-		// according to the tests, always print "true"
-		System.out.println("true");
-	}
-	
-	/**
-	 * A textual representation of the free list and the allocated list.
-	 */
-	public String toString() {
-		return "FreeList: " + freeList.toString() + "\nAllocList: " + allocatedList.toString();
-	}
+    /**
+     * Performs defragmentation of the freeList:
+     * 1) If freeList size < 2 => do nothing
+     * 2) gather the free blocks in an array, sort by baseAddress
+     * 3) rebuild freeList in sorted order
+     * 4) merge consecutive blocks
+     */
+    public void defrag() {
+        if (freeList.getSize() < 2) {
+            return;
+        }
+        // gather
+        java.util.ArrayList<MemoryBlock> blocks = new java.util.ArrayList<>();
+        for (int i = 0; i < freeList.getSize(); i++) {
+            blocks.add(freeList.getBlock(i));
+        }
+        // sort by base
+        blocks.sort((a,b)->Integer.compare(a.baseAddress, b.baseAddress));
+        // rebuild freeList
+        freeList = new LinkedList();
+        for (MemoryBlock mb : blocks) {
+            freeList.addLast(mb);
+        }
+        // merge consecutive
+        int i = 0;
+        while (i < freeList.getSize() - 1) {
+            MemoryBlock curr = freeList.getBlock(i);
+            MemoryBlock nxt = freeList.getBlock(i+1);
+            if (curr.baseAddress + curr.length == nxt.baseAddress) {
+                // merge
+                curr.length += nxt.length;
+                freeList.remove(nxt);
+            } else {
+                i++;
+            }
+        }
+    }
+
+    /**
+     * Returns a textual representation:
+     * 1) First line: freeList.toString()  (e.g. "(0 , 20) (20 , 30) ")
+     * 2) Followed by "\n"
+     * 3) Second line: allocatedList.toString() (e.g. "(50 , 10) (60 , 40) ")
+     *
+     * If freeList is empty => first line is "" => then appended "\n"
+     * If allocatedList is empty => second line is "" => so the result might end with newline only.
+     */
+    public String toString() {
+        return freeList.toString() + "\n" + allocatedList.toString();
+    }
 }
